@@ -1,0 +1,19 @@
+﻿生成启动时间为 2018/5/9 21:23:01。
+     1>项目“F:\project\C++\DNAAlgorithm\DNAAlgorithm\DNAAlgorithm.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         F:\VS2013\VS 2013\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
+         main.cpp
+     1>f:\project\c++\dnaalgorithm\dnaalgorithm\ops.h(86): warning C4018: “<”: 有符号/无符号不匹配
+     1>f:\project\c++\dnaalgorithm\dnaalgorithm\ops.h(91): warning C4018: “<”: 有符号/无符号不匹配
+     1>f:\project\c++\dnaalgorithm\dnaalgorithm\ops.h(105): warning C4018: “<”: 有符号/无符号不匹配
+     1>f:\project\c++\dnaalgorithm\dnaalgorithm\ops.h(169): warning C4018: “<”: 有符号/无符号不匹配
+     1>f:\project\c++\dnaalgorithm\dnaalgorithm\main.cpp(61): warning C4018: “<”: 有符号/无符号不匹配
+     1>f:\project\c++\dnaalgorithm\dnaalgorithm\main.cpp(82): warning C4018: “<”: 有符号/无符号不匹配
+       Link:
+         F:\VS2013\VS 2013\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"F:\project\C++\DNAAlgorithm\Debug\DNAAlgorithm.exe" /INCREMENTAL /NOLOGO /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"F:\project\C++\DNAAlgorithm\Debug\DNAAlgorithm.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:\project\C++\DNAAlgorithm\Debug\DNAAlgorithm.lib" /MACHINE:X86 Debug\main.obj
+         DNAAlgorithm.vcxproj -> F:\project\C++\DNAAlgorithm\Debug\DNAAlgorithm.exe
+     1>已完成生成项目“F:\project\C++\DNAAlgorithm\DNAAlgorithm\DNAAlgorithm.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:00.98
