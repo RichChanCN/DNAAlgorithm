@@ -6,8 +6,10 @@
 #include<algorithm>
 using namespace std;
 
-const static int POP_NUM = 30;	//种群大小
-const static int GEN = 10;	//迭代次数
+//==========================需要手动更改的配置===========================
+
+static int POP_NUM = 30;	//种群大小
+static int GEN = 10;	//迭代次数
 const static int Pmut = 100;	//变异概率分母
 const static int P = 400;	//惩罚系数
 
@@ -46,7 +48,7 @@ static int RC[MAX_DOC_NUM][MAX_PERIOD_NUM] = { 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 
 static int Qjs[MAX_OPS_NUM][MAX_ROOM_NUM] = { 1, 1, 1, 1, 1, 1, 0, 1, 1, 1 };	//手术与手术室的关系
 vector<set<int> > doc_ops;
 
-int pop_random_array[POP_NUM];
+//==========================需要手动更改的配置（完）=======================
 
 class Ops{//I里面的三元素个体
 public:
@@ -104,7 +106,7 @@ public:
 void POP::toStr(){
 	for (int i = 0; i < m_list.size(); i++)
 	{
-		cout<<"种群" << i <<":"<<endl;
+		cout<<"个体" << i <<":"<<endl;
 		m_list[i].toStr();
 	}
 	cout << endl;
