@@ -11,27 +11,30 @@ using namespace std;
 static int POP_NUM = 30;	//种群大小
 static int GEN = 10;	//迭代次数
 const static int Pmut = 100;	//变异概率分母
-const static int P = 400;	//惩罚系数
+const static int P = 4000;	//惩罚系数
 
 static bool isMuted = false;
 
-const static int MAX_DOC_NUM = 4;	//最多的医生数
-const static int MAX_OPS_NUM = 5;	//最多的手术数量
-const static int MAX_DAY_NUM = 2;	//最大天数
+const static int Q1 = 11;	//杂交参数
+const static int Q2 = 12;	//杂交参数
+
+const static int MAX_DOC_NUM = 8;	//最多的医生数
+const static int MAX_OPS_NUM = 24;	//最多的手术数量
+const static int MAX_DAY_NUM = 5;	//最大天数
 const static int MAX_PERIOD_PER_DAY = 2;	//一天分段数
 const static int MAX_PERIOD_NUM = MAX_PERIOD_PER_DAY * MAX_DAY_NUM;	//总分段数量
-const static int MAX_ROOM_NUM = 2;	//总手术室数
+const static int MAX_ROOM_NUM = 5;	//总手术室数
 const static int MYINFINITY = 1000000;	//自己定义的无限大
 
 
-static int dayliy_resource_num[MAX_DAY_NUM] = { 10, 10 };	//每天的资源数
-static int ops_resource_num[MAX_OPS_NUM] = { 3, 4, 4, 1, 4 };	//每个手术需要的资源
-static int ops_need_time[MAX_OPS_NUM] = { 4, 5, 3, 2, 4 };	//每个手术需要的时间
-static int DN[MAX_ROOM_NUM][MAX_DAY_NUM] = { 6, 4, 4, 6 };	//DN
-static int DM[MAX_ROOM_NUM][MAX_DAY_NUM] = { 8, 8, 8, 8 };	//DM
+static int dayliy_resource_num[MAX_DAY_NUM] = { 60, 60, 60, 60, 60 };	//每天的资源数
+static int ops_resource_num[MAX_OPS_NUM] = { 2, 3, 4, 2, 4, 2, 2, 1, 4, 4, 1, 5, 2, 2, 2, 4, 4, 3, 3, 2, 2, 5, 2, 3 };	//每个手术需要的资源
+static int ops_need_time[MAX_OPS_NUM] = { 3, 3, 5, 3, 4, 3, 3, 1, 4, 3, 2, 5, 3, 3, 2, 4, 4, 4, 4, 3, 3, 4, 3, 3 };	//每个手术需要的时间
+static int DN[MAX_ROOM_NUM][MAX_DAY_NUM] = { 8, 6, 8, 6, 8, 8, 6, 8, 6, 8, 8, 6, 8, 6, 8, 8, 6, 8, 6, 8, 8, 6, 8, 6, 8 };	//DN
+static int DM[MAX_ROOM_NUM][MAX_DAY_NUM] = { 12, 8, 12, 8, 12, 12, 8, 12, 8, 12, 12, 8, 12, 8, 12, 12, 8, 12, 8, 12, 12, 8, 12, 8, 12 };	//DM
 
 //=======需要-1的数据========
-static int DL[MAX_OPS_NUM] = { 3, 3, 3, 3, 3 };	//每个手术的最晚完成时间
+static int DL[MAX_OPS_NUM] = { 3, 2, 2, 3, 5, 5, 5, 4, 4, 4, 4, 5, 4, 4, 3, 3, 3, 3, 5, 5, 4, 3, 2, 4 };	//每个手术的最晚完成时间
 //===========================
 
 map<int, int> dayliy_nurse_num;
@@ -44,10 +47,76 @@ map<int, int> anesthetist_temply_num_by_ops;
 static int room_rest_cost = 5;	//手术室空闲成本
 static int room_over_cost = 6;	//手术室超时成本
 
-static int RC[MAX_DOC_NUM][MAX_PERIOD_NUM] = { 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0 };	//医生空闲时间
-static int Qjs[MAX_OPS_NUM][MAX_ROOM_NUM] = { 1, 1, 1, 1, 1, 1, 0, 1, 1, 1 };	//手术与手术室的关系
+static int RC[MAX_DOC_NUM][MAX_PERIOD_NUM] = { 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 };	//医生空闲时间
+static int Qjs[MAX_OPS_NUM][MAX_ROOM_NUM] = { 1, 1, 0, 0, 1,
+0, 1, 1, 1, 1,
+0, 1, 0, 1, 1,
+1, 0, 1, 1, 0,
+1, 0, 1, 0, 0,
+1, 1, 0, 0, 1,
+0, 1, 1, 1, 1,
+0, 1, 0, 1, 0,
+0, 1, 1, 0, 0,
+1, 0, 0, 1, 1,
+0, 1, 1, 1, 0,
+1, 0, 0, 1, 1,
+0, 1, 0, 1, 1,
+1, 0, 1, 0, 0,
+1, 1, 0, 1, 1,
+0, 0, 1, 1, 1,
+0, 1, 0, 1, 1,
+0, 1, 0, 1, 1,
+1, 0, 1, 0, 1,
+1, 1, 0, 0, 0,
+1, 0, 1, 1, 0,
+0, 1, 0, 0, 1,
+0, 1, 1, 1, 1,
+0, 1, 0, 0, 1
+};	//手术与手术室的关系
 vector<set<int> > doc_ops;
-
+void initDoc_Ops(){
+	doc_ops.clear();
+	set<int> doc1;
+	doc1.insert(1);
+	doc1.insert(3);
+	doc1.insert(5);
+	doc1.insert(13);
+	doc_ops.push_back(doc1);
+	set<int> doc2;
+	doc2.insert(0);
+	doc2.insert(9);
+	doc2.insert(15);
+	doc2.insert(20);
+	doc_ops.push_back(doc2);
+	set<int> doc3;
+	doc3.insert(21);
+	doc3.insert(22);
+	doc_ops.push_back(doc3);
+	set<int> doc4;
+	doc4.insert(23);
+	doc_ops.push_back(doc4);
+	set<int> doc5;
+	doc5.insert(6);
+	doc5.insert(12);
+	doc5.insert(18);
+	doc5.insert(19);
+	doc_ops.push_back(doc5);
+	set<int> doc6;
+	doc6.insert(2);
+	doc6.insert(4);
+	doc6.insert(7);
+	doc6.insert(8);
+	doc_ops.push_back(doc6);
+	set<int> doc7;
+	doc7.insert(10);
+	doc7.insert(16);
+	doc_ops.push_back(doc7);
+	set<int> doc8;
+	doc8.insert(11);
+	doc8.insert(14);
+	doc8.insert(17);
+	doc_ops.push_back(doc8);
+}
 //==========================需要手动更改的配置（完）=======================
 //=============统计相关数据的变量======================
 static int mut_1_counts = 0; //变异1发生的次数
@@ -62,7 +131,7 @@ void initRecord(){
 
 class Ops{//I里面的三元素个体
 public:
-	Ops(int ID, int bt, int room):id(ID),begin_time(bt),ops_room(room){
+	Ops(int ID, int bt, int room) :id(ID), begin_time(bt), ops_room(room){
 
 	}
 	int id;
@@ -138,7 +207,7 @@ public:
 	static int fitness(const OpsGroup& opsg);	//适应性函数
 	static OpsGroup cross(const OpsGroup& lhs, const  OpsGroup& rhs, int q1, int q2);	//杂交函数
 	static void mut(OpsGroup& opsg);	//变异
-	static void mut(OpsGroup& opsg,FILE* f);	//变异
+	static void mut(OpsGroup& opsg, FILE* f);	//变异
 	static void sel(POP &pop);	//选择函数
 private:
 	static int LR(const OpsGroup& opsg);
@@ -153,7 +222,7 @@ private:
 void POP::toStr(){
 	for (int i = 0; i < m_list.size(); i++)
 	{
-		cout<<"个体" << i <<":"<<endl;
+		cout << "个体" << i << ":" << endl;
 		m_list[i].toStr();
 	}
 	cout << endl;
@@ -162,7 +231,7 @@ void POP::toStr(){
 void POP::writeFile(FILE* f){
 	for (int i = 0; i < m_list.size(); i++)
 	{
-		fprintf(f, "个体%d:(适应度:%d)\n",i+1,MyTool::fitness(m_list[i]));
+		fprintf(f, "个体%d:(适应度:%d)\n", i + 1, MyTool::fitness(m_list[i]));
 		m_list[i].writeFile(f);
 		fprintf(f, "\n");
 	}
@@ -173,7 +242,7 @@ bool MyTool::comp(const OpsGroup& og1, const OpsGroup& og2){
 }
 
 int MyTool::randomInVector(const vector<int>& vec){
-	return vec[rand()%vec.size()];
+	return vec[rand() % vec.size()];
 }
 
 int MyTool::randomFindBeginTime(int doc, int ops_id){
@@ -290,7 +359,7 @@ int MyTool::LP(const OpsGroup& opsg){
 
 	for (int i = 0; i < opsg.getSize(); i++)
 	{
-		LP[opsg.m_ops_list[i].ops_room][opsg.m_ops_list[i].begin_time/2] += ops_need_time[opsg.m_ops_list[i].id];
+		LP[opsg.m_ops_list[i].ops_room][opsg.m_ops_list[i].begin_time / 2] += ops_need_time[opsg.m_ops_list[i].id];
 	}
 
 	int result = 0;
@@ -314,7 +383,7 @@ bool MyTool::LDL(const OpsGroup& opsg){
 		if (opsg.m_ops_list[i].begin_time > DL[opsg.m_ops_list[i].id])
 			return false;
 	}
-	
+
 	return true;
 }
 
@@ -372,7 +441,7 @@ int MyTool::fitness(const OpsGroup& opsg){
 }
 
 void MyTool::mut(OpsGroup& opsg){
-	if (rand() % Pmut == Pmut-1){
+	if (rand() % Pmut == Pmut - 1){
 		int index = rand() % (opsg.getSize() - 1);
 		int temp = opsg.m_ops_list[index].id;
 		opsg.m_ops_list[index].id = opsg.m_ops_list[index + 1].id;

@@ -68,20 +68,7 @@ void run(){
 		pop_random_array[i] = i;
 	}
 
-	doc_ops.clear();
-	set<int> doc1;
-	doc1.insert(1);
-	doc_ops.push_back(doc1);
-	set<int> doc2;
-	doc2.insert(4);
-	doc_ops.push_back(doc2);
-	set<int> doc3;
-	doc3.insert(2);
-	doc_ops.push_back(doc3);
-	set<int> doc4;
-	doc4.insert(0);
-	doc4.insert(3);
-	doc_ops.push_back(doc4);
+	initDoc_Ops();
 
 	start = clock();//程序开始计时
 	POP pop;
@@ -89,7 +76,7 @@ void run(){
 	for (int j = 0; j < POP_NUM; j++)
 	{
 		OpsGroup ops_group;
-		for (int i = 0; i < 5; ++i){
+		for (int i = 0; i < MAX_OPS_NUM; ++i){
 			int doc = MyTool::findDoctorByOps(i);
 			int begin_time = MyTool::randomFindBeginTime(doc, DL[i]);
 			int room_id = MyTool::randomFindRoomByOps(i);
@@ -119,12 +106,12 @@ void run(){
 	fprintf(detail_file, "每代种群:\n");
 	for (int i = 0; i < GEN; i++)
 	{
-		fprintf(result_file, "第%d代种群适应度:\t",i+1);
+		fprintf(result_file, "第%d代种群适应度:\t", i + 1);
 		randomArray(pop_random_array, POP_NUM);
 		for (int j = 0; j < POP_NUM; j += 2)
 		{
-			OpsGroup kid1 = MyTool::cross(pop.m_list[pop_random_array[j]], pop.m_list[pop_random_array[j + 1]], 2, 3);
-			OpsGroup kid2 = MyTool::cross(pop.m_list[pop_random_array[j + 1]], pop.m_list[pop_random_array[j]], 2, 3);
+			OpsGroup kid1 = MyTool::cross(pop.m_list[pop_random_array[j]], pop.m_list[pop_random_array[j + 1]], Q1, Q2);
+			OpsGroup kid2 = MyTool::cross(pop.m_list[pop_random_array[j + 1]], pop.m_list[pop_random_array[j]], Q1, Q2);
 			MyTool::mut(kid1, result_file);
 			MyTool::mut(kid2, result_file);
 			pop.m_list.push_back(kid1);
@@ -134,7 +121,7 @@ void run(){
 		fprintf(result_file, "\n");
 
 		MyTool::sel(pop);
-		fprintf(detail_file, "第%d代种群:\n",i+1);
+		fprintf(detail_file, "第%d代种群:\n", i + 1);
 		pop.writeFile(detail_file);
 		for (int i = 0; i < pop.m_list.size(); i++)
 		{
@@ -155,7 +142,7 @@ void run(){
 
 	totaltime = (double)(finish - start) / CLOCKS_PER_SEC;
 	cout << "\n此次迭代运行时间为(包括写文件的时间)" << totaltime << "秒！" << endl;
-	cout << "\n请到文件中查看详细信息！"<< endl;
+	cout << "\n请到文件中查看详细信息！" << endl;
 
 	fprintf(result_file, "\n此次迭代发生的变异情况为:变异1:%d次，变异2:%d次，变异3:%d次\n", mut_1_counts, mut_2_counts, mut_3_counts);
 	fprintf(result_file, "\n此次迭代运行时间为(包括写文件的时间):%0.3f\n", totaltime);
