@@ -13,7 +13,7 @@ static int GEN = 10;	//迭代次数
 const static int Pmut = 100;	//变异概率分母
 const static int P = 400;	//惩罚系数
 
-bool isMuted = false;
+static bool isMuted = false;
 
 const static int MAX_DOC_NUM = 4;	//最多的医生数
 const static int MAX_OPS_NUM = 5;	//最多的手术数量
@@ -49,6 +49,16 @@ static int Qjs[MAX_OPS_NUM][MAX_ROOM_NUM] = { 1, 1, 1, 1, 1, 1, 0, 1, 1, 1 };	//
 vector<set<int> > doc_ops;
 
 //==========================需要手动更改的配置（完）=======================
+//=============统计相关数据的变量======================
+static int mut_1_counts = 0; //变异1发生的次数
+static int mut_2_counts = 0; //变异2发生的次数
+static int mut_3_counts = 0; //变异3发生的次数
+//=============统计相关数据的变量（完）================
+void initRecord(){
+	mut_1_counts = 0;
+	mut_2_counts = 0;
+	mut_3_counts = 0;
+}
 
 class Ops{//I里面的三元素个体
 public:
@@ -81,6 +91,7 @@ public:
 		return m_ops_list.size();
 	}
 	void toStr();
+	void writeFile(FILE* f);
 	vector<Ops> m_ops_list;
 };
 
@@ -92,15 +103,51 @@ void OpsGroup::toStr(){
 	cout << endl;
 	for (int i = 0; i < m_ops_list.size(); i++)
 	{
-		cout << " " << m_ops_list[i].ops_room << "\t";
+		cout << "  " << m_ops_list[i].ops_room << "\t";
 	}
 	cout << endl;
+}
+
+void OpsGroup::writeFile(FILE* f){
+	for (int i = 0; i < m_ops_list.size(); i++)
+	{
+		fprintf(f, "(%d,%d)\t", m_ops_list[i].id, m_ops_list[i].begin_time);
+	}
+	fprintf(f, "\n");
+	for (int i = 0; i < m_ops_list.size(); i++)
+	{
+		fprintf(f, "  %d\t\t", m_ops_list[i].ops_room);
+	}
+	fprintf(f, "\n");
 }
 
 class POP{
 public:
 	vector<OpsGroup> m_list;
 	void toStr();
+	void writeFile(FILE* f);
+};
+
+
+class MyTool
+{
+public:
+	static int findDoctorByOps(int ops_id);	//通过手术编号找ID
+	static int randomFindBeginTime(int doc, int deadline);	//通过医生和DL随机找开始时间
+	static int randomFindRoomByOps(int ops_id);	//通过手术编号随机找房间
+	static int fitness(const OpsGroup& opsg);	//适应性函数
+	static OpsGroup cross(const OpsGroup& lhs, const  OpsGroup& rhs, int q1, int q2);	//杂交函数
+	static void mut(OpsGroup& opsg);	//变异
+	static void mut(OpsGroup& opsg,FILE* f);	//变异
+	static void sel(POP &pop);	//选择函数
+private:
+	static int LR(const OpsGroup& opsg);
+	static int LP(const OpsGroup& opsg);
+	static bool LDL(const OpsGroup& opsg);
+	static bool LDC(const OpsGroup& opsg);
+	static int C(const OpsGroup& opsg);
+	static int randomInVector(const vector<int>& vec);
+	static bool comp(const OpsGroup& og1, const OpsGroup& og2);
 };
 
 void POP::toStr(){
@@ -112,25 +159,14 @@ void POP::toStr(){
 	cout << endl;
 }
 
-class MyTool
-{
-public:
-	static int findDoctorByOps(int ops_id);	//通过手术编号找ID
-	static int randomFindBeginTime(int doc, int deadline);	//通过医生和DL随机找开始时间
-	static int randomFindRoomByOps(int ops_id);	//通过手术编号随机找房间
-	static int fitness(const OpsGroup& opsg);	//适应性函数
-	static OpsGroup cross(const OpsGroup& lhs, const  OpsGroup& rhs, int q1, int q2);	//杂交函数
-	static void mut(OpsGroup& opsg);	//变异
-	static void sel(POP &pop);
-private:
-	static int LR(const OpsGroup& opsg);
-	static int LP(const OpsGroup& opsg);
-	static bool LDL(const OpsGroup& opsg);
-	static bool LDC(const OpsGroup& opsg);
-	static int C(const OpsGroup& opsg);
-	static int randomInVector(const vector<int>& vec);
-	static bool comp(const OpsGroup& og1, const OpsGroup& og2);
-};
+void POP::writeFile(FILE* f){
+	for (int i = 0; i < m_list.size(); i++)
+	{
+		fprintf(f, "个体%d:(适应度:%d)\n",i+1,MyTool::fitness(m_list[i]));
+		m_list[i].writeFile(f);
+		fprintf(f, "\n");
+	}
+}
 
 bool MyTool::comp(const OpsGroup& og1, const OpsGroup& og2){
 	return MyTool::fitness(og1) < MyTool::fitness(og2);
@@ -341,17 +377,47 @@ void MyTool::mut(OpsGroup& opsg){
 		int temp = opsg.m_ops_list[index].id;
 		opsg.m_ops_list[index].id = opsg.m_ops_list[index + 1].id;
 		opsg.m_ops_list[index + 1].id = temp;
+		mut_1_counts++;
 		isMuted = true;
 	}
 	if (rand() % Pmut == Pmut - 1){
 		int index = rand() % (opsg.getSize() - 1);
 		int doc = findDoctorByOps(opsg.m_ops_list[index].id);
 		opsg.m_ops_list[index].begin_time = randomFindBeginTime(doc, DL[opsg.m_ops_list[index].id]);
+		mut_2_counts++;
 		isMuted = true;
 	}
 	if (rand() % Pmut == Pmut - 1){
 		int index = rand() % (opsg.getSize());
 		opsg.m_ops_list[index].ops_room = randomFindRoomByOps(opsg.m_ops_list[index].id);
+		mut_3_counts++;
+		isMuted = true;
+	}
+}
+
+void MyTool::mut(OpsGroup& opsg, FILE* f){
+	if (rand() % Pmut == Pmut - 1){
+		int index = rand() % (opsg.getSize() - 1);
+		int temp = opsg.m_ops_list[index].id;
+		opsg.m_ops_list[index].id = opsg.m_ops_list[index + 1].id;
+		opsg.m_ops_list[index + 1].id = temp;
+		mut_1_counts++;
+		fprintf(f, "子代发生变异1\t");
+		isMuted = true;
+	}
+	if (rand() % Pmut == Pmut - 1){
+		int index = rand() % (opsg.getSize() - 1);
+		int doc = findDoctorByOps(opsg.m_ops_list[index].id);
+		opsg.m_ops_list[index].begin_time = randomFindBeginTime(doc, DL[opsg.m_ops_list[index].id]);
+		mut_2_counts++;
+		fprintf(f, "子代发生变异2\t");
+		isMuted = true;
+	}
+	if (rand() % Pmut == Pmut - 1){
+		int index = rand() % (opsg.getSize());
+		opsg.m_ops_list[index].ops_room = randomFindRoomByOps(opsg.m_ops_list[index].id);
+		mut_3_counts++;
+		fprintf(f, "子代发生变异3\t");
 		isMuted = true;
 	}
 }
